@@ -12,7 +12,7 @@
         </h1>
         <div>
           <ServerCard
-            v-for="server in $remote.auth.servers"
+            v-for="server in $remote.auth.servers.value"
             :key="server.Id || useId()"
             class="mt-2"
             :server-info="server" />
@@ -39,10 +39,10 @@ meta:
 
 <script setup lang="ts">
 import { useId } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { usePageTitle } from '@/composables/page-title';
+import { useTranslation } from 'i18next-vue';
+import { usePageTitle } from '#/composables/page-title';
 
-const { t } = useI18n();
+const { t } = useTranslation();
 
 usePageTitle(() => t('selectServer'));
 </script>

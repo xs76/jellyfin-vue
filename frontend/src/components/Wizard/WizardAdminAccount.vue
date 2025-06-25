@@ -11,20 +11,30 @@
       v-model="admin.Password"
       variant="outlined"
       :label="t('password')"
-      :append-icon="showPassword ? IconEyeOff : IconEye"
       :type="showPassword ? 'text' : 'password'"
       :disabled="loading"
-      @click:append="() => (showPassword = !showPassword)" />
+      @click:append="() => (showPassword = !showPassword)">
+      <template #append>
+        <JIcon
+          :class="showPassword ? 'i-mdi:eye-off' : 'i-mdi:eye'"
+          class="uno-w-10" />
+      </template>
+    </VTextField>
 
     <VTextField
       v-model="passwordCheck"
       variant="outlined"
       :label="t('confirmPassword')"
-      :append-icon="showPassword ? IconEyeOff : IconEye"
       :type="showPassword ? 'text' : 'password'"
       :rules="SamePasswordRules"
       :disabled="loading"
-      @click:append="() => (showPassword = !showPassword)" />
+      @click:append="() => (showPassword = !showPassword)">
+      <template #append>
+        <JIcon
+          :class="showPassword ? 'i-mdi:eye-off' : 'i-mdi:eye'"
+          class="uno-w-10" />
+      </template>
+    </VTextField>
 
     <VBtn
       color="secondary"
@@ -47,19 +57,17 @@
 <script setup lang="ts">
 import type { StartupUserDto } from '@jellyfin/sdk/lib/generated-client';
 import { getStartupApi } from '@jellyfin/sdk/lib/utils/api/startup-api';
-import IconEye from 'virtual:icons/mdi/eye';
-import IconEyeOff from 'virtual:icons/mdi/eye-off';
 import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { remote } from '@/plugins/remote';
-import { useSnackbar } from '@/composables/use-snackbar';
+import { useTranslation } from 'i18next-vue';
+import { remote } from '#/plugins/remote';
+import { useSnackbar } from '#/composables/use-snackbar';
 
 const emit = defineEmits<{
   'previous-step': [];
   'step-complete': [];
 }>();
 
-const { t } = useI18n();
+const { t } = useTranslation();
 
 const valid = ref(false);
 const admin = ref<StartupUserDto>({

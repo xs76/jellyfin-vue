@@ -22,24 +22,20 @@
         </div>
         <div
           v-if="item.Width && item.Height"
-          class="text-center text-body-2 text--secondary">
+          class="text-center text--secondary text-body-2">
           {{ t('dimensions', { width: item.Width, height: item.Height }) }}
         </div>
         <VCardActions class="justify-center">
           <VBtn
             icon
             @click="onSearch">
-            <VIcon>
-              <IMdiMagnify />
-            </VIcon>
+            <JIcon class="i-mdi:magnify" />
           </VBtn>
           <VBtn
             icon
             class="ml-3"
             @click="onDelete(item)">
-            <VIcon>
-              <IMdiDelete />
-            </VIcon>
+            <JIcon class="i-mdi:delete" />
           </VBtn>
         </VCardActions>
       </VCard>
@@ -75,17 +71,13 @@
             <VBtn
               icon
               @click="onSearch">
-              <VIcon>
-                <IMdiMagnify />
-              </VIcon>
+              <JIcon class="i-mdi:magnify" />
             </VBtn>
             <VBtn
               icon
               class="ml-3"
               @click="onDelete(item)">
-              <VIcon>
-                <IMdiDelete />
-              </VIcon>
+              <JIcon class="i-mdi:delete" />
             </VBtn>
           </VCardActions>
         </VCard>
@@ -106,18 +98,18 @@ import {
 } from '@jellyfin/sdk/lib/generated-client';
 import { getImageApi } from '@jellyfin/sdk/lib/utils/api/image-api';
 import { computed, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useTranslation } from 'i18next-vue';
 import { watchImmediate } from '@vueuse/core';
 import {
   getImageInfo
-} from '@/utils/images';
-import { remote } from '@/plugins/remote';
+} from '#/utils/images';
+import { remote } from '#/plugins/remote';
 
 const { metadata } = defineProps<{ metadata: BaseItemDto }>();
 
 const images = ref<ImageInfo[]>([]);
 const dialog = ref(false);
-const { t } = useI18n();
+const { t } = useTranslation();
 
 const generalImages = computed<ImageInfo[]>(() =>
   images.value.filter(

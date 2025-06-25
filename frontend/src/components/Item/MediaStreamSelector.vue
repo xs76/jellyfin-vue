@@ -16,24 +16,24 @@
       <VListItem
         v-bind="templateProps"
         :title="item.raw.title"
-        :subtitle="item.raw.subtitle"
-        :prepend-icon="item.raw.icon" />
+        :subtitle="item.raw.subtitle">
+        <template #prepend>
+          <JIcon
+            :class="item.raw.icon"
+            class="uno-w-10" />
+        </template>
+      </VListItem>
     </template>
   </VSelect>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, capitalize } from 'vue';
 import type { MediaStream } from '@jellyfin/sdk/lib/generated-client';
-import { useI18n } from 'vue-i18n';
-import IMdiSurroundSound20 from 'virtual:icons/mdi/surround-sound-2-0';
-import IMdiSurroundSound31 from 'virtual:icons/mdi/surround-sound-3-1';
-import IMdiSurroundSound51 from 'virtual:icons/mdi/surround-sound-5-1';
-import IMdiSurroundSound71 from 'virtual:icons/mdi/surround-sound-7-1';
-import IMdiSurroundSound from 'virtual:icons/mdi/surround-sound';
+import { useTranslation } from 'i18next-vue';
 import { watchImmediate } from '@vueuse/core';
-import { getLocaleName } from '@/utils/i18n';
-import { upperFirst } from '@/utils/data-manipulation';
+import { isNil } from '@jellyfin-vue/shared/validation';
+import { getLocaleName } from '#/utils/i18n';
 
 const { mediaStreams, type, defaultStreamIndex } = defineProps<{
   mediaStreams: MediaStream[];
@@ -43,28 +43,28 @@ const { mediaStreams, type, defaultStreamIndex } = defineProps<{
 const emit = defineEmits<{
   input: [newIndex?: number];
 }>();
-const { t, locale } = useI18n();
+const { t, i18next } = useTranslation();
 
 /**
  * Audio layout to get related icon
  * @returns Icon name
  */
-function getSurroundIcon(layout: string): typeof IMdiSurroundSound {
+function getSurroundIcon(layout: string) {
   switch (layout) {
     case '2.0': {
-      return IMdiSurroundSound20;
+      return 'i-mdi:surround-sound-2-0';
     }
     case '3.1': {
-      return IMdiSurroundSound31;
+      return 'i-mdi:surround-sound-3-1';
     }
     case '5.1': {
-      return IMdiSurroundSound51;
+      return 'i-mdi:surround-sound-5-1';
     }
     case '7.1': {
-      return IMdiSurroundSound71;
+      return 'i-mdi:surround-sound-7-1';
     }
     default: {
-      return IMdiSurroundSound;
+      return 'i-mdi:surround-sound';
     }
   }
 }
@@ -75,7 +75,7 @@ function getSurroundIcon(layout: string): typeof IMdiSurroundSound {
  */
 function getTrackIcon(
   track: MediaStream
-): typeof IMdiSurroundSound | undefined {
+) {
   if (type === 'Audio' && track.ChannelLayout) {
     return getSurroundIcon(track.ChannelLayout);
   }
@@ -87,8 +87,8 @@ function getTrackIcon(
  */
 function getTrackSubtitle(track: MediaStream): string | undefined {
   if ((type === 'Audio' || type === 'Subtitle') && track.Language) {
-    return upperFirst(
-      getLocaleName(track.Language, locale.value)
+    return capitalize(
+      getLocaleName(track.Language, i18next.language)
       ?? `${t('unknown')} (${track.Language})`
     );
   } else if (type === 'Audio' || type === 'Subtitle') {
@@ -122,7 +122,7 @@ const trackIndex = ref<number | null>(defaultStreamIndex ?? mediaStreams.find(tr
  */
 if (
   (type === 'Video' || type === 'Audio')
-  && trackIndex.value === null
+  && isNil(trackIndex.value)
   && selectItems.value[0]
 ) {
   // eslint-disable-next-line unicorn/no-null

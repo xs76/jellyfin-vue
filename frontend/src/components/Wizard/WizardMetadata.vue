@@ -44,17 +44,17 @@ import type {
 import { getLocalizationApi } from '@jellyfin/sdk/lib/utils/api/localization-api';
 import { getStartupApi } from '@jellyfin/sdk/lib/utils/api/startup-api';
 import { onMounted, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { SomeItemSelectedRule } from '@/utils/validation';
-import { remote } from '@/plugins/remote';
-import { useSnackbar } from '@/composables/use-snackbar';
+import { useTranslation } from 'i18next-vue';
+import { SomeItemSelectedRule } from '@jellyfin-vue/shared/validation';
+import { remote } from '#/plugins/remote';
+import { useSnackbar } from '#/composables/use-snackbar';
 
 const emit = defineEmits<{
   'step-complete': [];
   'previous-step': [];
 }>();
 
-const { t } = useI18n();
+const { t } = useTranslation();
 
 const metadataLanguage = ref('');
 const metadataCountry = ref('');
@@ -65,7 +65,7 @@ const loading = ref(false);
 
 onMounted(async () => {
   const api = remote.sdk.oneTimeSetup(
-    remote.auth.currentServer?.PublicAddress ?? ''
+    remote.auth.currentServer.value?.PublicAddress ?? ''
   );
 
   initialConfig.value = (
@@ -86,7 +86,7 @@ async function setMetadata(): Promise<void> {
   loading.value = true;
 
   const api = remote.sdk.oneTimeSetup(
-    remote.auth.currentServer?.PublicAddress ?? ''
+    remote.auth.currentServer.value?.PublicAddress ?? ''
   );
 
   try {

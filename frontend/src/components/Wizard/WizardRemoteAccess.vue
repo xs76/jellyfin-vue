@@ -27,16 +27,16 @@
 <script setup lang="ts">
 import { getStartupApi } from '@jellyfin/sdk/lib/utils/api/startup-api';
 import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { remote } from '@/plugins/remote';
-import { useSnackbar } from '@/composables/use-snackbar';
+import { useTranslation } from 'i18next-vue';
+import { remote } from '#/plugins/remote';
+import { useSnackbar } from '#/composables/use-snackbar';
 
 const emit = defineEmits<{
   'step-complete': [];
   'previous-step': [];
 }>();
 
-const { t } = useI18n();
+const { t } = useTranslation();
 
 const allowRemoteAccess = ref(false);
 const enableUPNP = ref(false);
@@ -49,7 +49,7 @@ async function setRemoteAccess(): Promise<void> {
   loading.value = true;
 
   const api = remote.sdk.oneTimeSetup(
-    remote.auth.currentServer?.PublicAddress ?? ''
+    remote.auth.currentServer.value?.PublicAddress ?? ''
   );
 
   try {

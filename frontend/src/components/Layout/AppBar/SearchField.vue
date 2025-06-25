@@ -2,17 +2,21 @@
   <VTextField
     v-model="searchQuery"
     class="search-input"
-    :prepend-inner-icon="IMdiMagnify"
     :placeholder="$t('search')"
     density="compact"
     hide-details
     single-line
-    @update:focused="onFocus" />
+    @update:focused="onFocus">
+    <template #prepend-inner>
+      <JIcon
+        class="i-mdi:magnify" />
+    </template>
+  </VTextField>
 </template>
 
 <script setup lang="ts">
-import IMdiMagnify from 'virtual:icons/mdi/magnify';
 import { computed } from 'vue';
+import { defu } from 'defu';
 import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
@@ -23,12 +27,12 @@ const searchQuery = computed({
     return route.query.q?.toString() ?? '';
   },
   set(value) {
-    void router.replace({
-      ...router.currentRoute.value,
-      query: {
-        q: value.trim() || undefined
-      }
-    });
+    void router.replace(
+      defu(
+        { query: { q: value.trim() } },
+        router.currentRoute.value
+      )
+    );
   }
 });
 

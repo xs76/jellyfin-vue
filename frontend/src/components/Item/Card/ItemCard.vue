@@ -12,11 +12,10 @@
         :type="getImageType" />
     </template>
     <template #upper-content>
-      <VProgressCircular
-        v-if="refreshProgress !== undefined"
-        :model-value="refreshProgress"
-        :indeterminate="refreshProgress === 0"
-        size="24" />
+      <JProgressCircular
+        v-if="!isNil(refreshProgress)"
+        :value="refreshProgress"
+        :indeterminate="refreshProgress === 0" />
       <WatchedIndicator v-if="item.UserData && item.UserData.Played" />
       <VChip
         v-if="item.UserData && item.UserData.UnplayedItemCount"
@@ -76,15 +75,15 @@ import {
   type BaseItemDto
 } from '@jellyfin/sdk/lib/generated-client';
 import { computed, shallowRef } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { isNil } from '@/utils/validation';
+import { useTranslation } from 'i18next-vue';
+import { isNil } from '@jellyfin-vue/shared/validation';
 import {
   CardShapes,
   canPlay,
   getItemDetailsLink,
   getShapeFromItemType
-} from '@/utils/items';
-import { taskManager } from '@/store/task-manager';
+} from '#/utils/items';
+import { taskManager } from '#/store/task-manager';
 
 const { item, shape, overlay, text, margin } = defineProps<{
   item: BaseItemDto;
@@ -94,7 +93,7 @@ const { item, shape, overlay, text, margin } = defineProps<{
   margin?: boolean;
 }>();
 
-const { t } = useI18n();
+const { t } = useTranslation();
 const isMenuOpen = shallowRef(false);
 
 const cardType = computed(() => getShapeFromItemType(item.Type));
@@ -187,6 +186,6 @@ const getImageType = computed(() =>
  * Gets the library update progress
  */
 const refreshProgress = computed(
-  () => taskManager.getTask(item.Id || '')?.progress
+  () => taskManager.getTask(item.Id ?? '')?.progress
 );
 </script>

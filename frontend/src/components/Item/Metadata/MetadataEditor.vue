@@ -140,9 +140,7 @@
               @click="onPersonAdd">
               <template #append>
                 <VAvatar>
-                  <VIcon>
-                    <IMdiPlusCircle />
-                  </VIcon>
+                  <JIcon class="i-mdi:plus-circle" />
                 </VAvatar>
               </template>
             </VListItem>
@@ -164,19 +162,15 @@
                       )
                     ">
                     <template #placeholder>
-                      <VIcon
-                        class="bg-grey-darken-3">
-                        <IMdiAccount />
-                      </VIcon>
+                      <JIcon
+                        class="bg-grey-darken-3 i-mdi:account" />
                     </template>
                   </JImg>
                 </VAvatar>
               </template>
               <template #append>
                 <VAvatar @click.stop="onPersonDel(i)">
-                  <VIcon>
-                    <IMdiDelete />
-                  </VIcon>
+                  <JIcon class="i-mdi:delete" />
                 </VAvatar>
               </template>
             </VListItem>
@@ -232,14 +226,14 @@ import { getUserLibraryApi } from '@jellyfin/sdk/lib/utils/api/user-library-api'
 import { AxiosError } from 'axios';
 import { format, formatISO } from 'date-fns';
 import { computed, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useTranslation } from 'i18next-vue';
 import { watchImmediate } from '@vueuse/core';
-import { getItemImageUrl } from '@/utils/images';
-import { isArray } from '@/utils/validation';
-import { remote } from '@/plugins/remote';
-import { useSnackbar } from '@/composables/use-snackbar';
-import { useDateFns } from '@/composables/use-datefns';
-import { pick } from '@/utils/data-manipulation';
+import { isArray, isNil } from '@jellyfin-vue/shared/validation';
+import { getItemImageUrl } from '#/utils/images';
+import { remote } from '#/plugins/remote';
+import { useSnackbar } from '#/composables/use-snackbar';
+import { useDateFns } from '#/composables/use-datefns';
+import { pick } from '#/utils/data-manipulation';
 
 interface ContentOption {
   value: string;
@@ -254,7 +248,7 @@ const emit = defineEmits<{
   'cancel': [];
 }>();
 
-const { t } = useI18n();
+const { t } = useTranslation();
 
 const metadata = ref<BaseItemDto>();
 const person = ref<BaseItemPerson>();
@@ -266,7 +260,7 @@ const contentOption = ref<ContentOption>();
 const contentType = ref<string>();
 const genresModel = computed({
   get() {
-    return metadata.value?.Genres === null ? undefined : metadata.value?.Genres;
+    return metadata.value?.Genres ?? undefined;
   },
   set(newVal) {
     if (isArray(newVal) && metadata.value) {
@@ -276,7 +270,7 @@ const genresModel = computed({
 });
 const tagsModel = computed({
   get() {
-    return metadata.value?.Tags === null ? undefined : metadata.value?.Tags;
+    return metadata.value?.Tags ?? undefined;
   },
   set(newVal) {
     if (isArray(newVal) && metadata.value) {
@@ -305,10 +299,7 @@ const tagLine = computed({
   get: () => metadata.value?.Taglines?.[0] ?? '',
   set: (v) => {
     if (metadata.value) {
-      if (!metadata.value.Taglines) {
-        metadata.value.Taglines = [];
-      }
-
+      metadata.value.Taglines ??= [];
       metadata.value.Taglines[0] = v;
     }
   }
@@ -320,7 +311,7 @@ const tagLine = computed({
 async function getData(): Promise<void> {
   const itemInfo = (
     await remote.sdk.newUserApi(getUserLibraryApi).getItem({
-      userId: remote.auth.currentUserId ?? '',
+      userId: remote.auth.currentUserId.value,
       itemId: itemId
     })
   ).data;
@@ -341,10 +332,10 @@ async function getData(): Promise<void> {
           value: r.Value ?? ''
         };
       }
-    }).filter((r): r is ContentOption => r !== undefined) ?? [];
+    }).filter((r): r is ContentOption => !isNil(r)) ?? [];
   contentOption.value
     = contentOptions.value.find(r => r.value === options.ContentType)
-    ?? contentOptions.value[0];
+      ?? contentOptions.value[0];
   contentType.value = options.ContentType ?? contentOption.value.value;
 
   metadata.value = itemInfo;
@@ -354,7 +345,7 @@ async function getData(): Promise<void> {
   }
 
   const ancestors = await remote.sdk.newUserApi(getLibraryApi).getAncestors({
-    userId: remote.auth.currentUserId ?? '',
+    userId: remote.auth.currentUserId.value,
     itemId: metadata.value.Id
   });
   const libraryInfo = ancestors.data.find(

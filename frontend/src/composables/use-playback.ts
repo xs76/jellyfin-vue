@@ -1,28 +1,25 @@
 import { useFullscreen, useMagicKeys, whenever } from '@vueuse/core';
 import { watch } from 'vue';
-import { router } from '@/plugins/router';
-import { mediaElementRef } from '@/store';
-import { playbackManager } from '@/store/playback-manager';
-
-interface PlaybackComposableReturn {
-  fullscreen: ReturnType<typeof useFullscreen>;
-}
+import { router } from '#/plugins/router';
+import { mediaElementRef } from '#/store';
+import { playbackManager } from '#/store/playback-manager';
 
 /**
- * Watchers and handlers that are common to music and video playback
+ * Watchers and handlers that are common to fullscreen music and video playback
+ * pages
  */
-export function usePlayback(): PlaybackComposableReturn {
-  watch(() => playbackManager.currentItem, () => {
-    if (!playbackManager.currentItem) {
+export function usePlayback() {
+  watch(playbackManager.currentItem, () => {
+    if (!playbackManager.currentItem.value) {
       router.back();
     }
-  });
+  }, { flush: 'sync' });
 
   /**
    * - iOS's Safari fullscreen API is only available for the video element
    */
   const fullscreen = useFullscreen().isSupported.value
-    ? useFullscreen(undefined, { autoExit: true })
+    ? useFullscreen(document.body, { autoExit: true })
     : useFullscreen(mediaElementRef, { autoExit: true });
 
   const keys = useMagicKeys();

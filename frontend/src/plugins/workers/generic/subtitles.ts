@@ -1,3 +1,5 @@
+/// <reference lib="WebWorker" />
+
 /**
  * Helper for subtitle manipulation and subtitle-related utility functions
  */
@@ -20,12 +22,12 @@ type TagMap = Record<string, string>;
 /**
  * Parse time string used in subtitle files to seconds
  */
-function parseTime(timeString: string) {
+function parseTime(timeString: `${string}:${string}:${string}`) {
   const [hours, minutes, seconds] = timeString.split(':').map((element) => {
     return Number.parseFloat(element);
   });
 
-  return hours * 3600 + minutes * 60 + seconds;
+  return hours! * 3600 + minutes! * 60 + seconds!;
 }
 
 /**

@@ -36,15 +36,15 @@
 
 <script setup lang="ts">
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
-import { useI18n } from 'vue-i18n';
-import { getItemDetailsLink } from '@/utils/items';
+import { useTranslation } from 'i18next-vue';
+import { getItemDetailsLink } from '#/utils/items';
 
 const { relatedItems, vertical } = defineProps<{
   relatedItems: BaseItemDto[];
   vertical?: boolean;
 }>();
 
-const { t } = useI18n();
+const { t } = useTranslation();
 </script>
 
 <style scoped>

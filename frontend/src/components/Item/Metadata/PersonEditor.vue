@@ -1,7 +1,7 @@
 <template>
   <VDialog
     max-width="30%"
-    :model-value="person !== undefined"
+    :model-value="!isNil(person)"
     @update:model-value="emit('close')">
     <VCard>
       <VCardTitle>{{ t('editPerson') }}</VCardTitle>
@@ -18,10 +18,8 @@
                 "
                 :alt="$t('person')">
                 <template #placeholder>
-                  <VIcon
-                    class="bg-grey-darken-3">
-                    <IMdiAccount />
-                  </VIcon>
+                  <JIcon
+                    class="bg-grey-darken-3 i-mdi:account" />
                 </template>
               </JImg>
             </VAvatar>
@@ -79,10 +77,11 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useTranslation } from 'i18next-vue';
 import { type BaseItemPerson, ImageType } from '@jellyfin/sdk/lib/generated-client';
 import { watchImmediate } from '@vueuse/core';
-import { getItemImageUrl } from '@/utils/images';
+import { isNil } from '@jellyfin-vue/shared/validation';
+import { getItemImageUrl } from '#/utils/images';
 
 const { person } = defineProps<{ person: BaseItemPerson | undefined }>();
 
@@ -91,7 +90,7 @@ const emit = defineEmits<{
   'close': [];
 }>();
 
-const { t } = useI18n();
+const { t } = useTranslation();
 
 const editState = ref<BaseItemPerson>();
 const options = computed(() => [

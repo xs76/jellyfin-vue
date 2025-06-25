@@ -18,17 +18,17 @@ import type {
   MediaStream,
   TransportStreamTimestamp
 } from '@jellyfin/sdk/lib/generated-client';
-import { useI18n } from 'vue-i18n';
-import { isNumber, isBool } from '@/utils/validation';
-import { getLocaleName } from '@/utils/i18n';
-import { formatBitRate } from '@/utils/items';
+import { useTranslation } from 'i18next-vue';
+import { isNumber, isBool } from '@jellyfin-vue/shared/validation';
+import { getLocaleName } from '#/utils/i18n';
+import { formatBitRate } from '#/utils/items';
 
 const { stream, videoTimestamp } = defineProps<{
   stream: MediaStream;
   videoTimestamp?: TransportStreamTimestamp;
 }>();
 
-const { t, locale } = useI18n();
+const { t, locale } = useTranslation();
 
 const properties = computed(() => {
   const p = new Map<string, string | number | boolean | null | undefined>();

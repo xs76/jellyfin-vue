@@ -41,11 +41,8 @@
           hide-details />
       </VRow>
       <VDivider />
-      <VProgressCircular
+      <JProgressCircular
         v-if="loading"
-        :size="70"
-        :width="7"
-        color="primary"
         indeterminate
         class="loading-bar" />
       <VCard
@@ -100,9 +97,7 @@
                 icon
                 :disabled="loading"
                 @click="onDownload(item)">
-                <VIcon>
-                  <IMdiCloudDownload />
-                </VIcon>
+                <JIcon class="i-mdi:cloud-download" />
               </VBtn>
             </VCardActions>
           </VCard>
@@ -121,9 +116,9 @@ import {
 } from '@jellyfin/sdk/lib/generated-client';
 import { getRemoteImageApi } from '@jellyfin/sdk/lib/utils/api/remote-image-api';
 import { computed, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { getLocaleName } from '@/utils/i18n';
-import { remote } from '@/plugins/remote';
+import { useTranslation } from 'i18next-vue';
+import { getLocaleName } from '#/utils/i18n';
+import { remote } from '#/plugins/remote';
 
 const { metadata, dialog } = defineProps<{
   metadata: BaseItemDto;
@@ -135,7 +130,7 @@ const emit = defineEmits<{
   'download-success': [someting: boolean];
 }>();
 
-const { t } = useI18n();
+const { t } = useTranslation();
 
 const providers = ref<ImageProviderInfo[]>([]);
 const type = ref<ImageType>(ImageType.Primary);

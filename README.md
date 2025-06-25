@@ -74,6 +74,8 @@
 
 Jellyfin Vue is an experimental, alternative browser-based web client for Jellyfin written using Vue.js.
 
+![](https://raw.githubusercontent.com/jellyfin/jellyfin.org/refs/heads/master/blog/2023/04-03-vue_vue3/vue-homepage.png)
+
 > [!NOTE]
 > Jellyfin Vue is not planned or targeted to replace [the main Jellyfin Web client](https://github.com/jellyfin/jellyfin-web), and is not feature-complete.
 
@@ -85,7 +87,7 @@ There are no stable releases yet.*
 
 ## [Hosted instance 🌍](https://jf-vue.pages.dev/)
 
-Built from the latest commit in the default branch. Just input your server address when prompted.
+Built from the latest commit in the default branch. Just input your server address when prompted. If you don't have a Jellyfin server, try with our demo instance: `https://demo.jellyfin.org/stable`
 
 ⚠️ **This only works for Jellyfin servers that [are behind a reverse proxy and have HTTPS set up correctly](https://jellyfin.org/docs/general/networking/#running-jellyfin-behind-a-reverse-proxy)**. If your server runs over HTTP, you must host it yourself.
 
@@ -128,7 +130,7 @@ It connects by default to the Jellyfin server that is running alongside,
 but it's also capable to connect to other Jellyfin servers [like can be tested in our demo](https://demo.jellyfin.org/) and [the hosted instance](https://jellyfin-web.pages.dev/).
 By inspecting the network requests, you will find that only connections to fetch its own assets are made to the server distributing the client, but connections to your own Jellyfin server will not go through it.
 
-The same principel applies to Jellyfin Vue. Note that Jellyfin Web can also be hosted standalone, just like Jellyfin Vue.
+The same principle applies to Jellyfin Vue. Note that Jellyfin Web can also be hosted standalone, just like Jellyfin Vue.
 
 - _Relevant links_: [Community standards](https://jellyfin.org/docs/general/community-standards) and [Social Contract](https://github.com/jellyfin/jellyfin-meta/blob/master/policies-and-procedures/jellyfin-social-contract.md)
 </details>

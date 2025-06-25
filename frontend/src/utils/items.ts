@@ -13,30 +13,13 @@ import { getItemsApi } from '@jellyfin/sdk/lib/utils/api/items-api';
 import { getTvShowsApi } from '@jellyfin/sdk/lib/utils/api/tv-shows-api';
 import { getUserLibraryApi } from '@jellyfin/sdk/lib/utils/api/user-library-api';
 import { getUserViewsApi } from '@jellyfin/sdk/lib/utils/api/user-views-api';
-import IMdiAccount from 'virtual:icons/mdi/account';
-import IMdiAlbum from 'virtual:icons/mdi/album';
-import IMdiBookMusic from 'virtual:icons/mdi/book-music';
-import IMdiBookOpenPageVariant from 'virtual:icons/mdi/book-open-page-variant';
-import IMdiFilmstrip from 'virtual:icons/mdi/filmstrip';
-import IMdiFolder from 'virtual:icons/mdi/folder';
-import IMdiFolderMultiple from 'virtual:icons/mdi/folder-multiple';
-import IMdiImage from 'virtual:icons/mdi/image';
-import IMdiImageMultiple from 'virtual:icons/mdi/image-multiple';
-import IMdiMovie from 'virtual:icons/mdi/movie';
-import IMdiMusic from 'virtual:icons/mdi/music';
-import IMdiMusicBox from 'virtual:icons/mdi/music-box';
-import IMdiMusicNote from 'virtual:icons/mdi/music-note';
-import IMdiPlaylistPlay from 'virtual:icons/mdi/playlist-play';
-import IMdiTelevisionClassic from 'virtual:icons/mdi/television-classic';
-import IMdiYoutube from 'virtual:icons/mdi/youtube';
-import IMdiYoutubeTV from 'virtual:icons/mdi/youtube-tv';
 import type { ComputedRef } from 'vue';
 import type { RouteNamedMap } from 'vue-router/auto-routes';
+import { isNil } from '@jellyfin-vue/shared/validation';
 import { ticksToMs } from './time';
-import { isNil } from '@/utils/validation';
-import { router } from '@/plugins/router';
-import { remote } from '@/plugins/remote';
-import { useBaseItem } from '@/composables/apis';
+import { router } from '#/plugins/router';
+import { remote } from '#/plugins/remote';
+import { useBaseItem } from '#/composables/apis';
 
 /**
  * A list of valid collections that should be treated as folders.
@@ -102,40 +85,40 @@ export function isLibrary(item: BaseItemDto): boolean {
  */
 export function getLibraryIcon(
   libraryType: string | undefined | null
-): typeof IMdiMovie {
+) {
   switch (libraryType?.toLowerCase()) {
     case 'movies': {
-      return IMdiMovie;
+      return 'i-mdi:movie';
     }
     case 'music': {
-      return IMdiMusic;
+      return 'i-mdi-music';
     }
     case 'photos': {
-      return IMdiImage;
+      return 'i-mdi:image';
     }
     case 'livetv': {
-      return IMdiYoutubeTV;
+      return 'i-mdi:youtube-tv';
     }
     case 'tvshows': {
-      return IMdiTelevisionClassic;
+      return 'i-mdi:television-classic';
     }
     case 'homevideos': {
-      return IMdiImageMultiple;
+      return 'i-mdi:image-multiple';
     }
     case 'musicvideos': {
-      return IMdiMusicBox;
+      return 'i-mdi:music-box';
     }
     case 'books': {
-      return IMdiBookOpenPageVariant;
+      return 'i-mdi:book-open-page-variant';
     }
     case 'channels': {
-      return IMdiYoutube;
+      return 'i-mdi:youtube';
     }
     case 'playlists': {
-      return IMdiPlaylistPlay;
+      return 'i-mdi:playlist-play';
     }
     default: {
-      return IMdiFolder;
+      return 'i-mdi:folder';
     }
   }
 }
@@ -228,7 +211,7 @@ export function canIdentify(item: BaseItemDto): boolean {
  * @returns Whether the item can be played on this client or not
  */
 export function canPlay(item: BaseItemDto | undefined): boolean {
-  if (item === undefined) {
+  if (isNil(item)) {
     return false;
   }
 
@@ -257,7 +240,7 @@ export function canPlay(item: BaseItemDto | undefined): boolean {
  * Check if an item can be resumed
  */
 export function canResume(item: BaseItemDto): boolean {
-  return Boolean(item.UserData?.PlaybackPositionTicks && item.UserData.PlaybackPositionTicks > 0);
+  return !!(item.UserData?.PlaybackPositionTicks && item.UserData.PlaybackPositionTicks > 0);
 }
 /**
  * Determine if an item can be mark as played
@@ -268,7 +251,7 @@ export function canResume(item: BaseItemDto): boolean {
 export function canMarkWatched(item: BaseItemDto): boolean {
   if (
     ['Series', 'Season', 'BoxSet', 'AudioPodcast', 'AudioBook'].includes(
-      item.Type || ''
+      item.Type ?? ''
     )
   ) {
     return true;
@@ -302,7 +285,7 @@ export function canRefreshMetadata(item: BaseItemDto): boolean {
   const incompleteRecording
     = item.Type === BaseItemKind.Recording && item.Status !== 'Completed';
   const IsAdministrator
-    = remote.auth.currentUser?.Policy?.IsAdministrator ?? false;
+    = remote.auth.currentUser.value?.Policy?.IsAdministrator ?? false;
 
   return (
     IsAdministrator
@@ -372,58 +355,58 @@ export function getItemDetailsLink(
  */
 export function getItemIcon(
   item: BaseItemDto | BaseItemPerson
-): typeof IMdiAccount | undefined {
+) {
   let itemIcon;
 
   if (isPerson(item)) {
-    itemIcon = IMdiAccount;
+    itemIcon = 'i-mdi:account';
   } else {
     switch (item.Type) {
       case 'Audio': {
-        itemIcon = IMdiMusicNote;
+        itemIcon = 'i-mdi:music-note';
         break;
       }
       case 'AudioBook': {
-        itemIcon = IMdiBookMusic;
+        itemIcon = 'i-mdi:book-music';
         break;
       }
       case 'Book': {
-        itemIcon = IMdiBookOpenPageVariant;
+        itemIcon = 'i-mdi:book-open-page-variant';
         break;
       }
       case 'BoxSet': {
-        itemIcon = IMdiFolderMultiple;
+        itemIcon = 'i-mdi:folder-multiple';
         break;
       }
       case 'Folder':
       case 'CollectionFolder': {
-        itemIcon = IMdiFolder;
+        itemIcon = 'i-mdi:folder';
         break;
       }
       case 'Movie': {
-        itemIcon = IMdiFilmstrip;
+        itemIcon = 'i-mdi:filmstrip';
         break;
       }
       case 'MusicAlbum': {
-        itemIcon = IMdiAlbum;
+        itemIcon = 'i-mdi:album';
         break;
       }
       case 'MusicArtist':
       case 'Person': {
-        itemIcon = IMdiAccount;
+        itemIcon = 'i-mdi:account';
         break;
       }
       case 'PhotoAlbum': {
-        itemIcon = IMdiImageMultiple;
+        itemIcon = 'i-mdi:image-multiple';
         break;
       }
       case 'Playlist': {
-        itemIcon = IMdiPlaylistPlay;
+        itemIcon = 'i-mdi:playlist-play';
         break;
       }
       case 'Series':
       case 'Episode': {
-        itemIcon = IMdiTelevisionClassic;
+        itemIcon = 'i-mdi:television-classic';
         break;
       }
     }
@@ -456,7 +439,7 @@ export function getMediaStreams(
         ...stream,
         Index: index
       })
-    )
+    );
 }
 
 /**
@@ -470,7 +453,7 @@ export function getItemIdFromSourceIndex(
   item: BaseItemDto,
   sourceIndex?: number
 ): string {
-  if (sourceIndex === undefined) {
+  if (isNil(sourceIndex)) {
     return item.Id ?? '';
   }
 
@@ -508,7 +491,7 @@ export async function getItemSeasonDownloadMap(
   const episodes
     = (
       await remote.sdk.newUserApi(getItemsApi).getItems({
-        userId: remote.auth.currentUserId,
+        userId: remote.auth.currentUserId.value,
         parentId: seasonId,
         fields: [ItemFields.Overview, ItemFields.CanDownload, ItemFields.Path]
       })
@@ -540,7 +523,7 @@ export async function getItemSeriesDownloadMap(
   const seasons
     = (
       await remote.sdk.newUserApi(getTvShowsApi).getSeasons({
-        userId: remote.auth.currentUserId,
+        userId: remote.auth.currentUserId.value,
         seriesId: seriesId
       })
     ).data.Items ?? [];
@@ -602,18 +585,16 @@ interface IndexPageQueries {
  */
 export async function fetchIndexPage(): Promise<IndexPageQueries> {
   const latestPerLibrary = new Map<BaseItemDto['Id'], ComputedRef<BaseItemDto[]>>();
-  const latestPromises: Promise<void>[] = [];
   const { data: views } = await useBaseItem(getUserViewsApi, 'getUserViews')();
-
-  for (const view of views.value) {
-    latestPromises.push((async () => {
+  const latestItems = views.value.map((view) => {
+    return (async () => {
       const { data } = await useBaseItem(getUserLibraryApi, 'getLatestMedia')(() => ({
         parentId: view.Id
       }));
 
       latestPerLibrary.set(view.Id, data);
-    })());
-  }
+    })();
+  });
 
   const itemPromises = [
     useBaseItem(getItemsApi, 'getResumeItems')(() => ({
@@ -623,13 +604,16 @@ export async function fetchIndexPage(): Promise<IndexPageQueries> {
     useBaseItem(getTvShowsApi, 'getNextUp')()
   ];
 
-  const results = (await Promise.all([Promise.all(itemPromises), Promise.all(latestPromises)]))[0];
+  const results = (await Promise.all([
+    Promise.all(itemPromises),
+    Promise.all(latestItems)
+  ]))[0];
 
   return {
     views,
-    resumeVideo: results[0].data,
-    carousel: results[1].data,
-    nextUp: results[2].data,
+    resumeVideo: results[0]!.data,
+    carousel: results[1]!.data,
+    nextUp: results[2]!.data,
     latestPerLibrary
   };
 }

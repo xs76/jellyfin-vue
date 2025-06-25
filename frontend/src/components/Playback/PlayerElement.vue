@@ -7,29 +7,28 @@
       <div class="uno-relative">
         <Component
           :is="mediaElementType"
-          v-show="mediaElementType === 'video' && videoContainerRef"
+          v-show="playbackManager.isVideo.value && videoContainerRef"
           ref="mediaElementRef"
           :poster="String(posterUrl)"
           autoplay
           crossorigin
           playsinline
-          :loop="playbackManager.isRepeatingOnce"
-          class="uno-h-full uno-max-h-100vh"
+          :loop="playbackManager.isRepeatingOnce.value"
           :class="{
-            'uno-object-fill': playerElement.isStretched.value,
-            'uno-w-screen': playerElement.isStretched.value
+            'uno-object-fill uno-w-screen': playerElement.state.value.isStretched,
+            'uno-h-full uno-max-h-100vh': playbackManager.isVideo.value
           }"
           @loadeddata="onLoadedData">
           <track
-            v-for="sub in playbackManager.currentItemVttParsedSubtitleTracks"
-            :key="`${playbackManager.currentSourceUrl}-${sub.srcIndex}`"
+            v-for="sub in playerElement.currentItemVttParsedSubtitleTracks.value"
+            :key="`${playbackManager.currentSourceUrl.value}-${sub.srcIndex}`"
             kind="subtitles"
             :label="sub.label"
             :srclang="sub.srcLang"
             :src="sub.src">
         </Component>
         <SubtitleTrack
-          v-if="subtitleSettings.state.enabled && playerElement.currentExternalSubtitleTrack?.parsed !== undefined" />
+          v-if="subtitleSettings.state.value.enabled && playerElement.currentExternalSubtitleTrack.value?.parsed" />
       </div>
     </Teleport>
   </template>
@@ -38,21 +37,22 @@
 <script setup lang="ts">
 import Hls, { ErrorTypes, Events, type ErrorData } from 'hls.js';
 import HlsWorkerUrl from 'hls.js/dist/hls.worker.js?url';
-import { computed, nextTick, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useSnackbar } from '@/composables/use-snackbar';
+import { computed, nextTick, onScopeDispose, watch } from 'vue';
+import { useTranslation } from 'i18next-vue';
+import { isNil } from '@jellyfin-vue/shared/validation';
+import { PromiseQueue } from '@jellyfin-vue/shared/promises';
+import { useSnackbar } from '#/composables/use-snackbar';
 import {
   mediaElementRef,
   mediaWebAudio
-} from '@/store';
-import { playbackManager } from '@/store/playback-manager';
-import { playerElement, videoContainerRef } from '@/store/player-element';
-import { getImageInfo } from '@/utils/images';
-import { isNil } from '@/utils/validation';
-import { subtitleSettings } from '@/store/client-settings/subtitle-settings';
+} from '#/store';
+import { playbackManager } from '#/store/playback-manager';
+import { playerElement, videoContainerRef } from '#/store/player-element';
+import { getImageInfo } from '#/utils/images';
+import { subtitleSettings } from '#/store/settings/subtitle';
 
-const { t } = useI18n();
-let busyWebAudio = false;
+const { t } = useTranslation();
+const webAudioQueue = new PromiseQueue();
 const hls = Hls.isSupported()
   ? new Hls({
     testBandwidth: false,
@@ -61,17 +61,17 @@ const hls = Hls.isSupported()
   : undefined;
 
 const mediaElementType = computed<'audio' | 'video' | undefined>(() => {
-  if (playbackManager.isAudio) {
+  if (playbackManager.isAudio.value) {
     return 'audio';
-  } else if (playbackManager.isVideo) {
+  } else if (playbackManager.isVideo.value) {
     return 'video';
   }
 });
 
 const posterUrl = computed(() =>
-  !isNil(playbackManager.currentItem)
-  && playbackManager.isVideo
-    ? getImageInfo(playbackManager.currentItem, {
+  !isNil(playbackManager.currentItem.value)
+  && playbackManager.isVideo.value
+    ? getImageInfo(playbackManager.currentItem.value, {
       preferBackdrop: true
     }).url
     : undefined
@@ -91,28 +91,16 @@ function detachHls(): void {
  * Suspends WebAudio when no playback is in place
  */
 async function detachWebAudio(): Promise<void> {
-  if (mediaWebAudio.context.state === 'running' && !busyWebAudio) {
-    busyWebAudio = true;
+  const { context, sourceNode } = mediaWebAudio;
 
-    try {
-      if (mediaWebAudio.gainNode) {
-        mediaWebAudio.gainNode.gain.setValueAtTime(mediaWebAudio.gainNode.gain.value, mediaWebAudio.context.currentTime);
-        mediaWebAudio.gainNode.gain.exponentialRampToValueAtTime(0.0001, mediaWebAudio.context.currentTime + 1.5);
-        await nextTick();
-        await new Promise(resolve => globalThis.setTimeout(resolve));
-        mediaWebAudio.gainNode.disconnect();
-        mediaWebAudio.gainNode = undefined;
-      }
-
-      if (mediaWebAudio.sourceNode) {
-        mediaWebAudio.sourceNode.disconnect();
-        mediaWebAudio.sourceNode = undefined;
-      }
-
-      await mediaWebAudio.context.suspend();
-    } catch {} finally {
-      busyWebAudio = false;
+  if (context.value) {
+    if (sourceNode.value) {
+      sourceNode.value.disconnect();
+      sourceNode.value = undefined;
     }
+
+    await context.value.close();
+    context.value = undefined;
   }
 }
 
@@ -120,38 +108,24 @@ async function detachWebAudio(): Promise<void> {
  * Resumes WebAudio when playback is in place
  */
 async function attachWebAudio(el: HTMLMediaElement): Promise<void> {
-  if (mediaWebAudio.context.state === 'suspended' && !busyWebAudio) {
-    busyWebAudio = true;
+  const { context, sourceNode } = mediaWebAudio;
 
-    try {
-      await mediaWebAudio.context.resume();
-
-      mediaWebAudio.sourceNode = mediaWebAudio.context.createMediaElementSource(el);
-      mediaWebAudio.sourceNode.connect(mediaWebAudio.context.destination);
-
-      /**
-       * The gain node is to avoid cracks when stopping playback or switching really fast between tracks
-       */
-      mediaWebAudio.gainNode = mediaWebAudio.context.createGain();
-      mediaWebAudio.gainNode.connect(mediaWebAudio.context.destination);
-      mediaWebAudio.gainNode.gain.setValueAtTime(mediaWebAudio.gainNode.gain.value, mediaWebAudio.context.currentTime);
-      mediaWebAudio.gainNode.gain.exponentialRampToValueAtTime(1, mediaWebAudio.context.currentTime + 1.5);
-    } catch {} finally {
-      busyWebAudio = false;
-    }
-  }
+  context.value = new AudioContext();
+  sourceNode.value = context.value.createMediaElementSource(el);
+  await context.value.resume();
+  sourceNode.value.connect(context.value.destination);
 }
 
 /**
  * Called by the media element when the playback is ready
  */
 async function onLoadedData(): Promise<void> {
-  if (playbackManager.isVideo) {
+  if (playbackManager.isVideo.value) {
     if (mediaElementRef.value) {
       /**
        * Makes the resume start from the correct time
        */
-      mediaElementRef.value.currentTime = playbackManager.currentTime;
+      mediaElementRef.value.currentTime = playbackManager.currentTime.value;
     }
 
     await playerElement.applyCurrentSubtitle();
@@ -189,31 +163,37 @@ function onHlsEror(_event: typeof Hls.Events.ERROR, data: ErrorData): void {
   }
 }
 
-watch(mediaElementRef, async () => {
+watch(mediaElementRef, () => {
   detachHls();
-  await detachWebAudio();
+  void webAudioQueue.add(() => detachWebAudio());
 
   if (mediaElementRef.value) {
-    if (mediaElementType.value === 'video' && hls) {
+    if (playbackManager.isVideo.value && hls) {
       hls.attachMedia(mediaElementRef.value);
       hls.on(Events.ERROR, onHlsEror);
     }
 
-    await attachWebAudio(mediaElementRef.value);
+    if (playbackManager.isAudio.value) {
+      void webAudioQueue.add(() => attachWebAudio(mediaElementRef.value!));
+    }
   }
 });
 
-watch(
-  () => playbackManager.currentSourceUrl,
-  (newUrl) => {
+watch(playbackManager.currentSourceUrl,
+  async (newUrl) => {
     if (hls) {
       hls.stopLoad();
     }
 
+    /**
+     * Ensure element is mounted before setting the source.
+     */
+    await nextTick();
+
     if (
       mediaElementRef.value
       && (!newUrl
-        || playbackManager.currentMediaSource?.SupportsDirectPlay
+        || playbackManager.currentMediaSource.value?.SupportsDirectPlay
         || !hls)
     ) {
       /**
@@ -225,7 +205,7 @@ watch(
       mediaElementRef.value.src = String(newUrl);
     } else if (
       hls
-      && playbackManager.isVideo
+      && playbackManager.isVideo.value
       && newUrl
     ) {
       /**
@@ -235,4 +215,10 @@ watch(
     }
   }
 );
+
+onScopeDispose(() => {
+  detachHls();
+  hls?.destroy();
+  void detachWebAudio();
+});
 </script>

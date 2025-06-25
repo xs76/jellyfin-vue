@@ -29,7 +29,7 @@
 
     <VCardText
       v-if="selectedMediaSource"
-      class="pa-3 d-flex flex-column flex-grow-1">
+      class="d-flex flex-grow-1 flex-column pa-3">
       <template v-if="(selectedMediaSource.MediaStreams?.length ?? 0) > 0">
         <VTabs
           v-model="currentTab"
@@ -146,10 +146,10 @@ import type {
   MediaStream
 } from '@jellyfin/sdk/lib/generated-client';
 import { computed, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { getLocaleName } from '@/utils/i18n';
-import { formatBitRate, formatFileSize } from '@/utils/items';
-import { isArray, isNil, isNumber } from '@/utils/validation';
+import { useTranslation } from 'i18next-vue';
+import { isArray, isNil, isNumber } from '@jellyfin-vue/shared/validation';
+import { getLocaleName } from '#/utils/i18n';
+import { formatBitRate, formatFileSize } from '#/utils/items';
 
 const { item, mediaSourceIndex } = defineProps<{ item: BaseItemDto; mediaSourceIndex?: number }>();
 
@@ -157,7 +157,7 @@ const emit = defineEmits<{
   close: [];
 }>();
 
-const { t, locale } = useI18n();
+const { t, i18next } = useTranslation();
 
 const model = defineModel<boolean>({ default: true });
 const currentTab = ref<string>();
@@ -215,7 +215,7 @@ const generalProperties = computed(() => {
     const p = new Map<string, string | number | boolean | null | undefined>();
     const formats
       = isArray(selectedMediaSource.value.Formats)
-      && selectedMediaSource.value.Formats.length
+        && selectedMediaSource.value.Formats.length
         ? selectedMediaSource.value.Formats.join(',')
         : undefined;
     const fileSize = isNumber(selectedMediaSource.value.Size)
@@ -223,7 +223,7 @@ const generalProperties = computed(() => {
       : undefined;
     const bitrate
       = isNumber(selectedMediaSource.value.Bitrate)
-      && selectedMediaSource.value.Bitrate > 0
+        && selectedMediaSource.value.Bitrate > 0
         ? formatBitRate(selectedMediaSource.value.Bitrate)
         : undefined;
 
@@ -242,7 +242,7 @@ const generalProperties = computed(() => {
  * of a media stream
  */
 function getDisplayLocaleName(language: string | null | undefined): string {
-  const result = language ? getLocaleName(language, locale.value) : undefined;
+  const result = language ? getLocaleName(language, i18next.language) : undefined;
 
   return result ?? t('unknown');
 }
